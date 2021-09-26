@@ -1,0 +1,65 @@
+FROM ubuntu:18.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN set -x && \
+  apt-get update -y && \
+  apt-get upgrade -y --no-install-recommends && \
+  : "basic dependencies" && \
+  apt-get install -y \
+    build-essential \
+    pkg-config \
+    cmake \
+    git \
+    wget \
+    curl \
+    tar \
+    unzip \
+    libopencv-dev \
+    autoconf \
+    libtool \
+    m4 \
+    automake \
+    gcc-6 \
+    g++-6 \
+    libopenblas-dev \
+    libblas-dev \
+    libeigen3-dev \
+    libgoogle-glog-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    freeglut3-dev \
+    libglew-dev \
+    libatlas-base-dev \
+    libsuitesparse-dev \
+    libsqlite3-dev \
+    libceres-dev \
+    libboost-all-dev \ 
+    nvidia-cuda-toolkit \
+    gdb &&\
+  : "remove cache" && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/apt/lists/*
+
+
+ARG USER=docker_infrascal
+ARG UID=1000
+ARG GID=1000
+ARG PW=user
+
+RUN useradd -m ${USER} --uid=${UID} && echo "${USER}:${PW}" | chpasswd && adduser ${USER} sudo
+WORKDIR /home/${USER}
+RUN mkdir -p /src && chown -R ${UID}:${GID} /home/${USER}
+
+RUN cd /home/${USER} && \
+    git clone --depth 1 --branch 3.4.2 https://github.com/opencv/opencv.git && \
+    git clone --depth 1 --branch 3.4.2 https://github.com/opencv/opencv_contrib.git && \
+    cd opencv && mkdir build && cd build && \
+    CC=/usr/bin/gcc-6 CXX=/usr/bin/g++-6 cmake .. -DWITH_CUDA=ON -DCMAKE_BUILD_TYPE=Release \
+    -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DOPENCV_ENABLE_NONFREE:BOOL=ON \
+    -DCUDA_NVCC_FLAGS=--expt-relaxed-constexpr && \
+    make -j8 && \
+    make install
+
+
+USER ${UID}:${GID}
