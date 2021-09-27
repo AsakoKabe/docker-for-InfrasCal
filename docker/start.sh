@@ -14,7 +14,6 @@ docker run -it -d --rm \
         --name infrascal \
         --net "host" \
         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-        -v `pwd`/../../:/home/docker_infrascal/src:rw \
         -v /home/${USER}:/home/${USER}:rw \
         -v /mnt:/mnt:rw \
         --gpus all  \

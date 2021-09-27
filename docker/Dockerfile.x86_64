@@ -41,7 +41,6 @@ RUN set -x && \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/*
 
-
 ARG USER=docker_infrascal
 ARG UID=1000
 ARG GID=1000
@@ -49,7 +48,6 @@ ARG PW=user
 
 RUN useradd -m ${USER} --uid=${UID} && echo "${USER}:${PW}" | chpasswd && adduser ${USER} sudo
 WORKDIR /home/${USER}
-RUN mkdir -p /src && chown -R ${UID}:${GID} /home/${USER}
 
 RUN cd /home/${USER} && \
     git clone --depth 1 --branch 3.4.2 https://github.com/opencv/opencv.git && \
@@ -61,5 +59,12 @@ RUN cd /home/${USER} && \
     make -j8 && \
     make install
 
+RUN cd /home/${USER} && \
+    git clone https://github.com/youkely/InfrasCal.git && \
+    cd InfrasCal && mkdir build && cd build && \
+    CC=/usr/bin/gcc-6 CXX=/usr/bin/g++-6 cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j8
+
+RUN chown -R ${UID}:${GID} /home/${USER}
 
 USER ${UID}:${GID}
